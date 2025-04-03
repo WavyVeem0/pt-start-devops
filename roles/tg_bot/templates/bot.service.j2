@@ -1,0 +1,14 @@
+[Unit]
+Description=Telegram Bot Service
+After=network.target postgresql.service
+
+[Service]
+User=root
+WorkingDirectory={{ bot_dir }}
+EnvironmentFile={{ bot_dir }}/.env
+ExecStart={{ bot_dir }}/venv/bin/python3 {{ bot_dir }}/pt-start-devops-main/bot.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,89 @@
+---
+- name: Validate data.env exists
+  assert:
+    that: lookup('file', 'data.env') != ''
+    msg: "File data.env not found in {{ playbook_dir }}"
+    quiet: yes
+- name: Create bot directory
+  become: yes
+  file:
+    path: "{{ bot_dir }}"
+    state: directory
+    mode: 0755
+
+- name: Copy environment file
+  copy:
+    src: "{{ playbook_dir }}/data.env"
+    dest: "{{ bot_dir }}/data.env"
+    owner: root
+    group: root
+    mode: 0600
+  no_log: true
+
+- name: Install dependencies
+  apt:
+    name: "{{ item }}"
+    state: present
+    update_cache: yes
+  loop:
+    - python3
+    - python3-pip
+    - git
+    - python3-venv
+    - libpq-dev
+    - python3-psycopg2
+    - unzip
+#- name: Clone bot repository
+#  git:
+#    repo: "{{ bot_repo }}"
+#    dest: "{{ bot_dir }}"
+#    version: master
+#    force: yes
+
+- name: Download repo archive
+  get_url:
+    url: "https://github.com/WavyVeem0/pt-start-devops/archive/main.zip"
+    dest: "/tmp/repo.zip"
+    timeout: 300
+
+- name: Unpack repository
+  unarchive:
+    src: "/tmp/repo.zip"
+    dest: "{{ bot_dir }}"
+    remote_src: yes
+
+- name: Create virtual environment
+  command: "python3 -m venv {{ bot_dir }}/venv"
+  args:
+    creates: "{{ bot_dir }}/venv"
+- name: Copy requirements file
+  copy:
+    src: "{{ playbook_dir }}/roles/tg_bot/files/requirements.txt"
+    dest: "{{ bot_dir }}/requirements.txt"
+    owner: root
+    group: root
+    mode: 0666
+  no_log: true
+- name: Install Python requirements
+  pip:
+    requirements: "{{ bot_dir }}/requirements.txt"
+    virtualenv: "{{ bot_dir }}/venv"
+    virtualenv_command: python3 -m venv
+
+- name: Create systemd service for bot
+  template:
+    src: bot.service.j2
+    dest: /etc/systemd/system/telegram_bot.service
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Reload systemd
+  systemd:
+    daemon_reload: yes
+
+- name: Enable and start bot service
+  service:
+    name: telegram_bot
+    state: started
+    enabled: yes

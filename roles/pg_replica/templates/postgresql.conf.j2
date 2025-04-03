@@ -1,0 +1,10 @@
+data_directory = '/var/lib/postgresql/{{ postgres_version }}/main'
+hba_file = '/etc/postgresql/{{ postgres_version }}/main/pg_hba.conf'
+ident_file = '/etc/postgresql/{{ postgres_version }}/main/pg_ident.conf'
+
+listen_addresses = '*'
+port = 5432
+max_connections = 100
+
+hot_standby = on
+wal_level = replica

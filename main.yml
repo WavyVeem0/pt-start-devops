@@ -1,0 +1,12 @@
+# PostgreSQL settings
+postgres_version: 14
+postgres_admin_password: "129110"
+postgres_repl_user: "repl_user"
+postgres_repl_password: "replpassword"
+postgres_db_name: "botdb"
+postgres_bot_user: "botuser"
+postgres_bot_password: "botpassword"
+
+# Telegram bot settings
+bot_repo: "https://github.com/WavyVeem0/pt-start-devops.git"
+bot_dir: "/opt/telegram_bot"

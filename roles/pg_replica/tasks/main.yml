@@ -1,0 +1,45 @@
+---
+- name: Install PostgreSQL
+  apt:
+    name: "postgresql-{{ postgres_version }}"
+    state: present
+    update_cache: yes
+
+- name: Stop PostgreSQL service
+  service:
+    name: "postgresql@{{ postgres_version }}-main"
+    state: stopped
+
+- name: Clean data directory
+  file:
+    path: "/var/lib/postgresql/{{ postgres_version }}/main"
+    state: absent
+
+
+- name: Create base backup from master
+  command: >
+    pg_basebackup -h {{ hostvars['master_db']['ansible_host'] }} -D /var/lib/postgresql/{{ postgres_version }}/main
+    -U {{ postgres_repl_user }} -v -P -R -X stream -S replica_slot
+  environment:
+    PGPASSWORD: "{{ lookup('env', 'DB_REPL_PASSWORD') }}"
+  become_user: postgres
+  no_log: false
+
+- name: Configure PostgreSQL replica
+  template:
+    src: postgresql.conf.j2
+    dest: "/etc/postgresql/{{ postgres_version }}/main/postgresql.conf"
+    owner: postgres
+    group: postgres
+    mode: 0644
+  notify: restart postgresql
+
+- name: Start PostgreSQL service
+  service:
+    name: "postgresql@{{ postgres_version }}-main"
+    state: started
+    enabled: yes
+- name: restart postgresql
+  service:
+    name: "postgresql@{{ postgres_version }}-main"
+    state: restarted

@@ -1,0 +1,18 @@
+---
+- name: Configure PostgreSQL Master
+  hosts: db_master
+  become: yes
+  roles:
+    - pg_master
+
+- name: Configure PostgreSQL Replica
+  hosts: db_replicas
+  become: yes
+  roles:
+    - pg_replica
+
+- name: Deploy Telegram Bot
+  hosts: tg_bot
+  become: yes
+  roles:
+    - tg_bot
